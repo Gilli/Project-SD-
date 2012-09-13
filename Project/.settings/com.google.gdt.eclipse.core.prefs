@@ -1,3 +1,4 @@
 eclipse.preferences.version=1
+jarsExcludedFromWebInfLib=/Users/macbook/Documents/twitter4j-2.2.6/lib/twitter4j-core-2.2.6.jar
 warSrcDir=war
 warSrcDirIsOutput=true
