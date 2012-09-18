@@ -1,0 +1,76 @@
+@charset "UTF-8";
+/* CSS Document */
+
+/* css di reset */
+html, body, div, span, applet, object, iframe,
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+a, abbr, acronym, address, big, cite, code,
+del, dfn, em, font, img, ins, kbd, q, s, samp,
+small, strike, strong, sub, sup, tt, var,
+dl, dt, dd, ol, ul, li,
+fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td {
+margin: 0;
+padding: 0;
+border: 0;
+outline: 0;
+}
+
+a {color: #000000; text-decoration:none;}
+
+.sfondo{
+background-color:#C8EAF2;
+background-repeat:repeat;
+background-repeat:inherit;
+/*background-color:#006337;*/
+font-size:12px;
+font-family:Arial, Helvetica, sans-serif;
+}
+
+/* contenitori */
+.container {
+	margin-top:10px;
+	width: 1000px;
+	position: absolute;
+	left: 50%;
+	margin-left: -500px;
+	background-color:#FFFFFF;
+}
+.container_2{
+	position:relative;
+	width:980px;
+	margin-left:10px;
+}
+
+.top {
+	position: relative;
+	width:980px;
+	height:60px;
+	text-align:center;
+	font-size:24px;
+}
+
+.center{
+	position:relative;
+	margin-top:20px;
+}
+
+.mappa{
+	position:relative;
+	width: 600px;
+	float:left;
+}
+
+.ins_dati{
+	position:relative;
+	font-style:normal;
+	margin-left: 640px;
+	width:380px;  /* 980-600  */
+}
+
+.riga_dati{
+	position:relative;
+	font-style:normal;
+	width:380px;  /* 900-600  */
+	margin-top:20px;
+}
