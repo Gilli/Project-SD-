@@ -64,13 +64,21 @@ font-family:Arial, Helvetica, sans-serif;
 .ins_dati{
 	position:relative;
 	font-style:normal;
-	margin-left: 640px;
-	width:380px;  /* 980-600  */
+	margin-left: 620px;
+	width:370px;  /* 980-600  */
 }
 
 .riga_dati{
 	position:relative;
 	font-style:normal;
-	width:380px;  /* 900-600  */
+	width:370px;  /* 900-600  */
 	margin-top:20px;
+}
+
+.ricerca_attiva{
+	position:relative;
+	font-style:normal;
+	width:370px;  /* 900-600  */
+	margin-top:20px;
+	background-color:#C66;
 }
