@@ -19,13 +19,14 @@ import com.google.appengine.api.ThreadManager;
 import com.google.appengine.api.datastore.DatastoreService;
 import com.google.appengine.api.datastore.DatastoreServiceFactory;
 import com.google.appengine.api.datastore.Entity;
+import com.google.appengine.api.datastore.FetchOptions;
 
 import com.google.appengine.api.datastore.KeyFactory;
 import com.google.appengine.api.datastore.Key;
 //import java.lang.Exception;
 
 import java.util.*;
-import java.lang.*;
+
 
 
 @SuppressWarnings({ "serial" })
@@ -33,31 +34,66 @@ public class ProjectServlet extends HttpServlet {
 	
 	
 	
-	final static int num_tweet_page = 1;
+	final static int num_tweet_page = 30;  // 5 pagine da 30  max 150 per ora
 	private Thread thread;
 	private boolean fermato = false;
 	public boolean ricerca = false;
 	
-	// Per orario
-	Calendar calendar = new GregorianCalendar();
+	
 	
 	DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
+	//creo la chiave delle ricerche
+	Key IndiceRicerche = KeyFactory.createKey("Indice", "Ricerche");
+	
 	Key key_util = KeyFactory.createKey("Parametri", "util_param");
 	Entity entity_util = new Entity("util",key_util);
+	
+	
 	
 	private boolean continuo_ricerca = false;
 	private long last_id;
 	
 	private boolean lim_superato = false;
 	
+	//------------------------------------------------------------------
+	// INIZIALIZZAZIONE DS
+	//------------------------------------------------------------------
+	public ProjectServlet()
+	  {
+		// INIZIALIZZAIONE ENTITA' UTIL
+		com.google.appengine.api.datastore.Query queryHash  = new com.google.appengine.api.datastore.Query("util",key_util);
+		 List<Entity> resultquery = datastore.prepare(queryHash).asList(FetchOptions.Builder.withDefaults());
+		  
+							  
+		  if (resultquery.isEmpty())
+		  {
+			  System.out.println("Lista vuota");
+		  }
+		  else
+		  {
 
+			  for (Entity util : resultquery)
+			  {
+
+				 datastore.delete(util.getKey());					  
+									  
+			  }
+		  }// fine else resultquery2.isEmpty()
+		
+		
+		entity_util.setProperty("Fermata", "false");
+		entity_util.setProperty("Ricerca", "Libera");
+		datastore.put(entity_util);
+	  }
+	// ----------------------------------
 	
+			
 	
 	class Task implements Runnable {
-		String hash, date_s, date_u;
+		String Upperhash, date_s, date_u;
 		
 		 Task(String hashtag, String date_since, String date_until) {
-			 hash = hashtag;
+			 Upperhash = hashtag;
 			 date_s = date_since;
 			 date_u = date_until;
 		 }
@@ -70,13 +106,21 @@ public class ProjectServlet extends HttpServlet {
 				entity_util.setProperty("Ricerca", "Libera");
 				datastore.put(entity_util);
 				
+	
+				
 				//creo il datastore
 			//	DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 				
 				Twitter twitter = new TwitterFactory().getInstance();
+				
+				String hash = Upperhash.toLowerCase();
+				System.out.println("  HASH   " + hash);
+				
 				//creo la chiave radice
-				//Key HashKey = KeyFactory.createKey("Ricerche", "#progettosd 2012-09-10 2012-09-15");
 				Key HashKey = KeyFactory.createKey("Ricerche", hash + " " + date_s + " " + date_u);
+				
+				
+				
 				
 				// Query su DB twitter
 				Query twquery = new Query(hash);
@@ -106,7 +150,7 @@ public class ProjectServlet extends HttpServlet {
 						{
 							entity_util.setProperty("Ricerca", "Attiva");
 							datastore.put(entity_util);
-		
+						
 							
 							//page 1
 							//System.out.println("PAGINA 11111111111111111111111111111111111111111111111111111111111");
@@ -225,20 +269,22 @@ public class ProjectServlet extends HttpServlet {
 						{
 							
 							try {
+								// Per orario
+								Calendar calendar = new GregorianCalendar();
+								int minuti = calendar.get(Calendar.MINUTE);
+								entity_util.setProperty("Minuti", minuti);	
 								entity_util.setProperty("Ricerca", "Bloccata");
 								datastore.put(entity_util);
-								
+							
 								
 								System.out.println("-------- 350 tweet, prossima ricerca fra un'ora -------");
-								
+								System.out.println("MINUTI:   " + minuti);
 								// salva i minuti
-								 int minuti = calendar.get(Calendar.MINUTE);
-								 entity_util.setProperty("Minuti", minuti);
-									datastore.put(entity_util);
-					
 								
-									
-								Thread.sleep(300000); // dopo un'ora
+								
+								
+								//Thread.sleep(3900000); // dopo un'ora e 5 minuti
+								Thread.sleep(10000); 
 							} catch (InterruptedException e) {
 								// TODO Auto-generated catch block
 								e.printStackTrace();
@@ -251,14 +297,33 @@ public class ProjectServlet extends HttpServlet {
 						}
 						
 					}// FINE WHILE RICERCA TOTALE CON TIMER
+					
+					// FINE RICERCA
+					//salvo parametri della ricerca nel ds
+					Entity ParametriRicerche = new Entity ("Parametri", IndiceRicerche);
+					ParametriRicerche.setProperty("Hashtag", hash);
+					ParametriRicerche.setProperty("Since", date_s);
+					ParametriRicerche.setProperty("Until", date_u);
+					
+					datastore.put(ParametriRicerche);
+				
 					System.out.println("FINE totale");
+					
+					
+					
+					
+					entity_util.setProperty("Fermata", "false");
+					entity_util.setProperty("Ricerca", "Libera");
+					datastore.put(entity_util);
+				  
+				// ----------------------------------
+					
+					
 				
 				
-				entity_util.setProperty("Ricerca", "Libera");
-				datastore.put(entity_util);
+			
 				fermato = false;
 				finito = false;
-				
 				
 		  }
 
@@ -269,17 +334,18 @@ public class ProjectServlet extends HttpServlet {
 			throws IOException {
 	
 	
-		
 			
-		//------------------------------------------------------------------
-		// FINE SOTTO-THREAD
-		//------------------------------------------------------------------
+			
+		
 		
 		if (request.getParameter("ferma") != null)
 		{
+			// indico nel DS che è stata fermata
+			entity_util.setProperty("Fermata", "true");
+			datastore.put(entity_util);
 			fermato = true;
-			System.out.println("INTERROTTOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO");
-			response.sendRedirect("/project.jsp?Ricerca=incorso");
+			//System.out.println("INTERROTTOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO");
+			response.sendRedirect("/project.jsp");
 			
 		}
 		else
@@ -330,7 +396,7 @@ public class ProjectServlet extends HttpServlet {
 	    		String date_since = anno_from + "-" + mese_from + "-" + giorno_from;
 	    		String date_until = anno_to + "-" + mese_to + "-" + giorno_to;
 				 
-	    	
+	    		
 	    		thread = ThreadManager.createBackgroundThread(new Task(hashtag,date_since,date_until));
 	    		thread.start();
 	    		
@@ -339,7 +405,8 @@ public class ProjectServlet extends HttpServlet {
 	    		//s.service(request, response);
 	    	}
 	    	catch (Exception exc) {
-	    		response.sendRedirect("/project.jsp?Error=Empty fields!");
+	    		exc.printStackTrace();
+	    		response.sendRedirect("/project.jsp?Error=Wrong input data!");
 	    		}    
 			
 			response.sendRedirect("/project.jsp?Ricerca=Attivata");

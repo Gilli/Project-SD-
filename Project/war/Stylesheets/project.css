@@ -19,7 +19,9 @@ outline: 0;
 a {color: #000000; text-decoration:none;}
 
 .sfondo{
-background-color:#C8EAF2;
+/*background-color:#C8EAF2;*/
+background-color:#464646;
+
 background-repeat:repeat;
 background-repeat:inherit;
 /*background-color:#006337;*/
@@ -55,11 +57,23 @@ font-family:Arial, Helvetica, sans-serif;
 	margin-top:20px;
 }
 
-.mappa{
+.sinistra{
 	position:relative;
 	width: 600px;
 	float:left;
 }
+
+.mappa{
+	position:relative;
+	width: 600px;
+	height:450px;
+}
+
+.ricerche{
+	position:relative;
+	width: 600px;
+}
+
 
 .ins_dati{
 	position:relative;
@@ -75,10 +89,51 @@ font-family:Arial, Helvetica, sans-serif;
 	margin-top:20px;
 }
 
+.indicazioni_ricerca{
+	position:relative;
+	font-style:normal;
+	font-size:10px;
+	width:370px;  /* 900-600  */
+	margin-top:10px;
+}
+
+/* Parte riquadro ricerca */
 .ricerca_attiva{
 	position:relative;
 	font-style:normal;
-	width:370px;  /* 900-600  */
+	width:340px;  /* 900-600  */
 	margin-top:20px;
-	background-color:#C66;
+	border-width: 2px 2px 2px 2px;
+	border-style: dashed;
+	border-color: red red red red;
 }
+
+.ricerca_attiva_riga{
+	position:relative;
+	font-style:normal;
+	width:330px;  /* 10 pixel in meno per i bordi  */
+	margin-top:10px;
+	margin-left:5px;
+}
+/*----------------------- */
+
+.riga_ricerche{
+	position:relative;
+	font-style:normal;
+	width:600px;  /* 900-600  */
+	margin-top:15px;
+}
+
+/* FONDO OPZIONI */
+.Opzioni{
+	position:relative;
+	text-align:right;
+	font-style:normal;
+	width:980px;  /* 900-600  */
+	margin-top:20px;
+	margin-bottom:20px;
+	float:left;
+}
+
+
+	
