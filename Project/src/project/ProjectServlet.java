@@ -283,8 +283,8 @@ public class ProjectServlet extends HttpServlet {
 								
 								
 								
-								//Thread.sleep(3900000); // dopo un'ora e 5 minuti
-								Thread.sleep(10000); 
+								Thread.sleep(3900000); // dopo un'ora e 5 minuti
+								//Thread.sleep(15000); 
 							} catch (InterruptedException e) {
 								// TODO Auto-generated catch block
 								e.printStackTrace();
