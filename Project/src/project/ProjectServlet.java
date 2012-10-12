@@ -23,7 +23,12 @@ import com.google.appengine.api.datastore.FetchOptions;
 
 import com.google.appengine.api.datastore.KeyFactory;
 import com.google.appengine.api.datastore.Key;
-//import java.lang.Exception;
+
+
+import com.google.appengine.api.taskqueue.Queue;
+import com.google.appengine.api.taskqueue.QueueFactory;
+import static com.google.appengine.api.taskqueue.TaskOptions.Builder.*;
+
 
 import java.util.*;
 
@@ -31,12 +36,7 @@ import java.util.*;
 
 @SuppressWarnings({ "serial" })
 public class ProjectServlet extends HttpServlet {
-	
-	
-	
-	final static int num_tweet_page = 30;  // 5 pagine da 30  max 150 per ora
-	private Thread thread;
-	private boolean fermato = false;
+
 	public boolean ricerca = false;
 	
 	
@@ -48,15 +48,11 @@ public class ProjectServlet extends HttpServlet {
 	Key key_util = KeyFactory.createKey("Parametri", "util_param");
 	Entity entity_util = new Entity("util",key_util);
 	
+	Queue queue_task;
 	
-	
-	private boolean continuo_ricerca = false;
-	private long last_id;
-	
-	private boolean lim_superato = false;
 	
 	//------------------------------------------------------------------
-	// INIZIALIZZAZIONE DS
+	// INIZIALIZZAZIONE DS NEL COSTRUTTORE
 	//------------------------------------------------------------------
 	public ProjectServlet()
 	  {
@@ -79,272 +75,59 @@ public class ProjectServlet extends HttpServlet {
 									  
 			  }
 		  }// fine else resultquery2.isEmpty()
+		  
 		
-		
+		  // inizializzazione tutto
 		entity_util.setProperty("Fermata", "false");
 		entity_util.setProperty("Ricerca", "Libera");
+		entity_util.setProperty("Hashtag","");
+		entity_util.setProperty("Since","");
+		entity_util.setProperty("Until","");
+		entity_util.setProperty("LastId",null);
 		datastore.put(entity_util);
+		
+		
+	    queue_task = QueueFactory.getDefaultQueue();  // coda per i task delle ricerche
+		
 	  }
 	// ----------------------------------
 	
-			
 	
-	class Task implements Runnable {
-		String Upperhash, date_s, date_u;
-		
-		 Task(String hashtag, String date_since, String date_until) {
-			 Upperhash = hashtag;
-			 date_s = date_since;
-			 date_u = date_until;
-		 }
-
-		  public void run() {
-				boolean finito = false;
-				int count_page = 1;
-				
-				// Modifica Paramatro Ricerca nel DS
-				entity_util.setProperty("Ricerca", "Libera");
-				datastore.put(entity_util);
-				
-	
-				
-				//creo il datastore
-			//	DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
-				
-				Twitter twitter = new TwitterFactory().getInstance();
-				
-				String hash = Upperhash.toLowerCase();
-				System.out.println("  HASH   " + hash);
-				
-				//creo la chiave radice
-				Key HashKey = KeyFactory.createKey("Ricerche", hash + " " + date_s + " " + date_u);
-				
-				
-				
-				
-				// Query su DB twitter
-				Query twquery = new Query(hash);
-				twquery.rpp(num_tweet_page);
-				QueryResult result = null;
-				twquery.since(date_s);
-				twquery.until(date_u);
-			
-					// WHILE RICERCA TOTALE CON TIMER
-					// inizializzazione parametri per ogni hashtags
-					finito=false;  
-					continuo_ricerca = false;
-					lim_superato = false;
-					last_id = 0;
-					
-					while (finito == false)
-					{
-						// Verifica se continua ricerca precedente
-						if (continuo_ricerca == true)
-						{
-						twquery.maxId(last_id-1);
-						}
-						
-						// WHILE DELLE QUERY PAGINATE
-						count_page =1;
-						while (count_page <= 5)
-						{
-							entity_util.setProperty("Ricerca", "Attiva");
-							datastore.put(entity_util);
-						
-							
-							//page 1
-							//System.out.println("PAGINA 11111111111111111111111111111111111111111111111111111111111");
-							twquery.setPage(count_page);
-							try {
-								result = twitter.search(twquery);
-								
-				
-								System.out.println("size " + result.getTweets().size() + "  res page" + result.getResultsPerPage());
-								
-								int count =0;
-								
-								for (Tweet tweet : result.getTweets()) {	count ++;
-								last_id = tweet.getId();
-								Status status = twitter.showStatus(tweet.getId());
-								User xx =  twitter.showUser(tweet.getFromUserId());
-								
-								System.out.println(	"Numero di elementi:" + count);
-								System.out.println(tweet.getGeoLocation() + tweet.getLocation() +"  ID TWEET "+ tweet.getId() +  " ID USER "+ tweet.getFromUserId() + tweet.getFromUser() + "  " +
-										tweet.getText() + tweet.getCreatedAt() + tweet.getAnnotations());
-								
-								
-								//salvo oggetto nel datastore
-								Entity entity = new Entity(hash, HashKey );
-								entity.setProperty("IDtweet", tweet.getId());
-								entity.setProperty("IDuser", tweet.getFromUserId());
-								
-								//System.out.println( "   TW PLACE  " + tweet.getPlace());
-								
-								
-								//GEOLOCATION
-								if ((tweet.getGeoLocation()!=null) && (tweet.getGeoLocation().getLatitude()!= (0.0) && tweet.getGeoLocation().getLongitude()!=(0.0)))
-								{
-									
-									System.out.println( "GEOLOCATION" + tweet.getGeoLocation().getLatitude() +"  "+  tweet.getGeoLocation().getLongitude() );
-									entity.setProperty("latitude", tweet.getGeoLocation().getLatitude());
-									entity.setProperty("longitude", tweet.getGeoLocation().getLongitude());
-									//datastore.put(entity);
-								}
-								
-								//STATUS
-								else if ( status.getPlace() !=null)  
-								{
-										
-										String [] coord = GoogleGeoCode.getLocation(status.getPlace().getFullName());
-										entity.setProperty("latitude", coord[0]);
-										entity.setProperty("longitude", coord[1]);
-										System.out.println( "STATUS  " + status.getPlace() +  "   COOOORD" +  status.getPlace().getGeometryCoordinates() );
-										//System.out.println( "STATUS  " + status.getPlace() +  "   GEOLOC" +  status.getGeoLocation());
-										System.out.println( "STATUS LOCATION" +  "lat:" + coord[0]   + "   long" + coord[1] );
-										//datastore.put(entity);
-										
-									
-								}
-								
-								//USER
-								else if (xx.getLocation() != null &&  !xx.getLocation().isEmpty() ) //user
-								{
-									// Possibile exception con place inventati
-									try
-									{
-										System.out.println( "USER \n LOCATION" + xx.getLocation() );
-										String [] coord = GoogleGeoCode.getLocation(xx.getLocation());
-										entity.setProperty("latitude", coord[0]);
-										entity.setProperty("longitude", coord[1]);
-										System.out.println(	"GEOCODE SERVICE   lat:" + coord[0]   + "   long" + coord[1] );
-										//datastore.put(entity);
-									}
-									catch(Exception e)
-									{
-										System.out.println( "Eccezione: nessuna posizione trovata");
-									}
-								}
-								
-								else
-								{
-									System.out.println( "nessuna posizione trovata");
-									//salvataggio
-									//datastore.put(entity);
-								}
-								
-								datastore.put(entity);
-								}
-							}
-									
-							 catch (TwitterException e) {
-								// TODO Auto-generated catch block
-								 
-								// limite superato 
-								e.printStackTrace();
-								count_page = 6;
-								lim_superato =true;
-							}
-							
-							// Se trovati meno di 70 quindi query finita
-							System.out.println( "Fine pagina: " + count_page );
-							count_page++;
-							if (result.getTweets().size() < num_tweet_page && lim_superato == false)
-							{
-								count_page =6;
-								finito = true;
-							}// FINE IF 
-							else // se non finita la ricerca
-							{
-								if (count_page == 5 || lim_superato == true)
-								{
-									continuo_ricerca = true;
-								}
-							}
-							
-							
-						} // FINE WHILE DELLE QUERY PAGINATE
-						System.out.println("FINE query paginate");
-						
-						if (finito == false)
-						{
-							
-							try {
-								// Per orario
-								Calendar calendar = new GregorianCalendar();
-								int minuti = calendar.get(Calendar.MINUTE);
-								entity_util.setProperty("Minuti", minuti);	
-								entity_util.setProperty("Ricerca", "Bloccata");
-								datastore.put(entity_util);
-							
-								
-								System.out.println("-------- 350 tweet, prossima ricerca fra un'ora -------");
-								System.out.println("MINUTI:   " + minuti);
-								// salva i minuti
-								
-								
-								
-								Thread.sleep(3900000); // dopo un'ora e 5 minuti
-								//Thread.sleep(15000); 
-							} catch (InterruptedException e) {
-								// TODO Auto-generated catch block
-								e.printStackTrace();
-							}
-						}
-						
-						if (fermato == true)
-						{
-							finito = true;
-						}
-						
-					}// FINE WHILE RICERCA TOTALE CON TIMER
-					
-					// FINE RICERCA
-					//salvo parametri della ricerca nel ds
-					Entity ParametriRicerche = new Entity ("Parametri", IndiceRicerche);
-					ParametriRicerche.setProperty("Hashtag", hash);
-					ParametriRicerche.setProperty("Since", date_s);
-					ParametriRicerche.setProperty("Until", date_u);
-					
-					datastore.put(ParametriRicerche);
-				
-					System.out.println("FINE totale");
-					
-					
-					
-					
-					entity_util.setProperty("Fermata", "false");
-					entity_util.setProperty("Ricerca", "Libera");
-					datastore.put(entity_util);
-				  
-				// ----------------------------------
-					
-					
-				
-				
-			
-				fermato = false;
-				finito = false;
-				
-		  }
-
-	}
 	
 	
 	public void doPost(HttpServletRequest request, HttpServletResponse response)
 			throws IOException {
 	
-	
-			
-			
+		//----------------------------------
+    	// CARICAMENTO ENTITY_UTIL
+    	//----------------------------------
+		com.google.appengine.api.datastore.Query queryHash  = new com.google.appengine.api.datastore.Query("util",key_util ).setAncestor(key_util);;
+		  List<Entity> resultquery2 = datastore.prepare(queryHash).asList(FetchOptions.Builder.withDefaults());
+		  
+							  
+		  if (resultquery2.isEmpty())
+		  {
+			  System.out.println("ERRORE");
+		  }
+		  else
+		  {
+
+			  for (Entity post : resultquery2)
+			  {
+				  entity_util = post;
+			  }
+		  }// fine else resultquery2.isEmpty()
 		
 		
 		if (request.getParameter("ferma") != null)
 		{
+			//queue_task.purge();
+			
 			// indico nel DS che è stata fermata
+			//entity_util.setProperty("Ricerca", "Bloccata");
 			entity_util.setProperty("Fermata", "true");
 			datastore.put(entity_util);
-			fermato = true;
-			//System.out.println("INTERROTTOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO");
+			
 			response.sendRedirect("/project.jsp");
 			
 		}
@@ -397,23 +180,27 @@ public class ProjectServlet extends HttpServlet {
 	    		String date_until = anno_to + "-" + mese_to + "-" + giorno_to;
 				 
 	    		
-	    		thread = ThreadManager.createBackgroundThread(new Task(hashtag,date_since,date_until));
-	    		thread.start();
+	    		entity_util.setProperty("Fermata", "false");
+	    		entity_util.setProperty("Ricerca", "Attiva");
+	    		entity_util.setProperty("Hashtag",hashtag);
+	    		entity_util.setProperty("Since",date_since);
+	    		entity_util.setProperty("Until",date_until);
+	    		entity_util.setProperty("LastId",null);
+	    		datastore.put(entity_util);
 	    		
-	    		//s.stop();
+	    		// Si aggiunge alla coda il task per la ricerca che si avvia subito
+	    		queue_task.add(withUrl("/taskRicerca"));
 	    		
-	    		//s.service(request, response);
+	    		
 	    	}
-	    	catch (Exception exc) {
+	    	catch (Exception exc) { // eccezione nel caso di errori di inserimento dati
 	    		exc.printStackTrace();
 	    		response.sendRedirect("/project.jsp?Error=Wrong input data!");
 	    		}    
 			
-			response.sendRedirect("/project.jsp?Ricerca=Attivata");
+			response.sendRedirect("/project.jsp?Ricerca=Attivata");  // Quando si avvia la ricerca
 		}
-		
-		//s = new SearchServlet();
-		//s.init();
+
 	
 	}
 	

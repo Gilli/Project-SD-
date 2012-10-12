@@ -22,4 +22,14 @@
   <servlet-name>SystemServiceServlet</servlet-name>
   <url-pattern>/_ah/spi/*</url-pattern>
  </servlet-mapping>
+ 
+ <servlet>
+		<servlet-name>Task</servlet-name>
+		<servlet-class>project.TaskServlet</servlet-class>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>Task</servlet-name>
+		<url-pattern>/taskRicerca</url-pattern>
+	</servlet-mapping>
+ 
 </web-app>

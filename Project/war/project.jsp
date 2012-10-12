@@ -20,6 +20,10 @@
 
 
 <%!
+
+	/*
+		INIZIALIZZAZIONE CHIAVI E VARIABILI
+	*/
 	
 	String Ricerca = "Libera";
 	DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
@@ -38,14 +42,13 @@
   <%
   
 	String Avvio_Ricerca;
-	// Controllo sulla ricerca
 	
+	// Controllo sulla ricerca
 	if (request.getParameter("Ricerca") != null)
 	{
 		Avvio_Ricerca = request.getParameter("Ricerca");
 		if (Avvio_Ricerca.compareTo("Attivata") == 0)
 		{
-		
 			Ricerca = "Attiva";  // Indica che è stata attivata una ricerca
     	}
 	}
@@ -66,9 +69,6 @@
 				for (Entity post : resultdata_stato) 
 				{
 					Ricerca = post.getProperty("Ricerca").toString();  // prende il parametro ricerca
-					System.out.println(Ricerca);
-					//System.out.println(	"ID TWEET:" + post.getProperty("IDtweet") + "  ID USER:"+ post.getProperty("IDuser") +
-					//	"  COORD:" + post.getProperty("latitude") +"  "+  post.getProperty("longitude") + "KEY" + post.getKey() );
 				}			
 			}
 			
@@ -99,29 +99,25 @@
 				
 	var map = new google.maps.Map(document.getElementById('map'), options);
 				
-	var mcOptions = {gridSize:50, maxZoom: 15};
+	var mcOptions = {gridSize:50, maxZoom: 15}; // Opzioni per il clusterizzatore
+	
 	var markers= [];
 
-				
-	//var marker1 = new google.maps.Marker({ position:latlng,
-      //                                map:map 
-        //                              });
 
 	
     <%
-		// ciclo per i marker
-		
-		
-		 
-				//String[] values = request.getParameterValues("elenco_ricerche");
+		// per visualizzazione marker
+	
+				// Se premuto il tasto Cancella Ricerche
 				if (request.getParameter("Visualizza_ricerche") != null)
 				{
+					// Se ci sono ricerche
 					if (request.getParameterValues("elenco_ricerche") != null)
 					{
 						  String[] values = request.getParameterValues("elenco_ricerche");
-						  // CONTROLLO SUL NUMERO DI RICERCHE
 						  
-						  if (values.length > 3)
+						  // CONTROLLO SUL NUMERO DI RICERCHE
+						  if (values.length > 3) 
 						  {
 							  %>
 									 window.alert("You can only select at most 3 research!");    
@@ -142,7 +138,6 @@
 								  String new_v = v.replace("|"," ");
 								  
 								  
-								  
 								  Key temp= KeyFactory.createKey("Ricerche", new_v);
 													  
 								  Query queryHash  = new Query(Hash[0] , temp);
@@ -156,7 +151,7 @@
 								  else
 								  {
 						  
-									  for (Entity has : resultquery2)
+									  for (Entity has : resultquery2)  // per ogni tweet prendo la posizione se c'è
 									  {
 										  if (has.getProperty("latitude") != null && has.getProperty("longitude") != null)	
 										  {
@@ -172,7 +167,7 @@
 												  icon: '<%=url_marker[i]%>'
 	   
 												});	
-												markers.push(marker);
+												markers.push(marker);  // aggiunge il marker all'array
 										  <%
 							  
 										  } // fine if
@@ -186,7 +181,7 @@
 					}
 				} // fine if request parameter  
 				%>
-				 var markerCluster  = new MarkerClusterer(map,markers, mcOptions);
+				 var markerCluster  = new MarkerClusterer(map,markers, mcOptions);   // crea il clusterizzatore
   // crea l'oggetto mappa
  
 } // fine function
@@ -227,8 +222,8 @@ window.onload = initialize;
                		<%	
 					
 						boolean empty_elenco_ricerche = false;  
-							//interrogo il DS
-
+						
+							//interrogo il DS per l'elenco ricerche
 							Query paramquery  = new Query("Parametri", IndiceRicerche);
 							List<Entity> resultq = datastore.prepare(paramquery).asList(FetchOptions.Builder.withDefaults());
 								
@@ -242,7 +237,6 @@ window.onload = initialize;
 								
 									for (Entity post : resultq) 
 										{
-											System.out.println(post.getKey());
 											String hash = post.getProperty("Hashtag").toString();
 											String since = post.getProperty("Since").toString();
 											String until = post.getProperty("Until").toString();
@@ -302,7 +296,7 @@ window.onload = initialize;
        				<div class="ricerca_attiva">
                 	<div class="ricerca_attiva_riga" style="text-align:center;">RICERCA IN CORSO</div>
             		
-                    <!-- stato ricerca -->
+                    <!-- Controllo sullo stato ricerca -->
                     <div class="ricerca_attiva_riga">Stato della ricerca: 
                      	<%
 						if (Ricerca.compareTo("Attiva") == 0)
@@ -324,6 +318,7 @@ window.onload = initialize;
 						
 						if  (Ricerca.compareTo("Bloccata") == 0) 
 						{
+							
 							
 							 Query dataquery_block  = new Query ("util",key_util).setAncestor(key_util);
 							List<Entity> resultdata_block = datastore.prepare(dataquery_block).asList(FetchOptions.Builder.withDefaults());
@@ -370,7 +365,7 @@ window.onload = initialize;
 						}  
 					%>
                     
-                    
+                    <!-- TASTO AGGIORNA SE RICERCA AVVIATA -->  
                     <form action="/project.jsp" method="post">
                     	<div class="ricerca_attiva_riga" style="font-size:10px; text-align:right; margin-top:50px; border-top-style:solid; border-top-width:1px;">
                         <div style="margin-top:5px; margin-bottom:5px;">Premi
@@ -399,12 +394,10 @@ window.onload = initialize;
     		}  
   
    			
-				%>
+		%>
         
-        
-   
-    <!-- <p>Hello, ${fn:escapeXml(ricerca)}!</p> -->
-    
+
+	<!-- LINK ALLA PAGINA OPZIONI PER CANCELLARE RICERCHE -->      
     <div class="Opzioni"> <a style="text-decoration:underline;" href="Options.jsp">Opzioni</a> </div>
     
     </div> 

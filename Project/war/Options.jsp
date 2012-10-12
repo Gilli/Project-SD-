@@ -21,13 +21,14 @@
 
 <%!
 	
+	/*
+		INIZIALIZZAZIONE CHIAVI E VARIABILI
+	*/
+	
 	String Ricerca = "Libera";
 	DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 	Key key_util = KeyFactory.createKey("Parametri", "util_param");
 	Key IndiceRicerche = KeyFactory.createKey("Indice", "Ricerche");
-	
-	
-	
 	
   %>
 
@@ -38,8 +39,8 @@
   
    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
    
+   <!--  Script per chiedere conferma -->
    <script language="javascript">
-<!--  Funzione per chiedere conferma -->
 	function confirmSubmit()
 	{
 		var agree=confirm("Sicuro di voler eliminare le ricerche selezionate?");
@@ -56,18 +57,15 @@
    
    
    <%
+   // Se premuto il tasto Cancella Ricerche
    if (request.getParameter("Cancella_Ricerche") != null)
 	{
+		// Se ci sono ricerche
 		if (request.getParameterValues("elenco_ricerche") != null)
 					{
 						  String[] values = request.getParameterValues("elenco_ricerche");
 						  // CONTROLLO SUL NUMERO DI RICERCHE
-						  
-						  
-							  
-							  
-								  
-						  
+	
 							  for (String v : values)
 							  {
 								  
@@ -75,15 +73,12 @@
 								  String [] Hash = v.split("\\|");
 								  String new_v = v.replace("|"," ");
 								  
-								  
-								  
+								  // crea la chiave
 								  Key temp= KeyFactory.createKey("Ricerche", new_v);
 									
 						 		 //cancello tutti i tweet della ricerca
 								  Query queryHash  = new Query(Hash[0] , temp);
-								  List<Entity> resultquery2 = datastore.prepare(queryHash).asList(FetchOptions.Builder.withDefaults());
-								  
-													  
+								  List<Entity> resultquery2 = datastore.prepare(queryHash).asList(FetchOptions.Builder.withDefaults());			  
 								  if (resultquery2.isEmpty())
 								  {
 									  System.out.println(	"NESSUN TWEET TROVATO");
@@ -102,14 +97,13 @@
 						
 					
 						
-							// cancella indice ricerche  
+							// CANCELLA INDICE RICERCHE
 							  Query paramquery  = new Query("Parametri", IndiceRicerche);
 							List<Entity> resultq = datastore.prepare(paramquery).asList(FetchOptions.Builder.withDefaults());
 								
 							if (resultq.isEmpty())
 								{
-									//System.out.println(	"NESSUNA RICERCA TROVATA");
-									//empty_elenco_ricerche = true;
+								
 								}
 							else
 								{
@@ -156,14 +150,13 @@
                		<%	
 						
 						boolean empty_elenco_ricerche = false;  
-							//interrogo il DS
-
+							
+							//interrogo il DS per l'elenco delle ricerche
 							Query paramquery  = new Query("Parametri", IndiceRicerche);
 							List<Entity> resultq = datastore.prepare(paramquery).asList(FetchOptions.Builder.withDefaults());
 								
 							if (resultq.isEmpty())
 								{
-									//System.out.println(	"NESSUNA RICERCA TROVATA");
 									empty_elenco_ricerche = true;
 								}
 							else
@@ -171,7 +164,6 @@
 								
 									for (Entity post : resultq) 
 										{
-											//System.out.println(post.getKey());
 											String hash = post.getProperty("Hashtag").toString();
 											String since = post.getProperty("Since").toString();
 											String until = post.getProperty("Until").toString();
