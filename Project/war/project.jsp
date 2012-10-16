@@ -338,10 +338,17 @@ window.onload = initialize;
 									fermata = post.getProperty("Fermata").toString();
 									int minuti_att = calendar.get(Calendar.MINUTE);
 									int minuti_ric = Integer.parseInt(post.getProperty("Minuti").toString());
-									dif_minuti = (65 - minuti_att +  minuti_ric);  // prende il parametro ricerca uno in più per sicurezza
-									//System.out.println(dif_minuti);
-										//System.out.println(	"ID TWEET:" + post.getProperty("IDtweet") + "  ID USER:"+ post.getProperty("IDuser") +
-										//	"  COORD:" + post.getProperty("latitude") +"  "+  post.getProperty("longitude") + "KEY" + post.getKey() );
+									
+									// due casi
+									if (minuti_att >= minuti_ric)
+									{
+										dif_minuti = (60 - (minuti_att - minuti_ric)) + 5; // più 5 tolleranza
+									}
+									else
+									{
+										dif_minuti= (60 - ((60-minuti_ric) + minuti_att)) + 5;  // più 5 tolleranza
+									}
+									//dif_minuti = (65 - minuti_att +  minuti_ric);
 										
 								}	
 								

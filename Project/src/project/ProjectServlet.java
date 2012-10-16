@@ -47,6 +47,7 @@ public class ProjectServlet extends HttpServlet {
 	
 	Key key_util = KeyFactory.createKey("Parametri", "util_param");
 	Entity entity_util = new Entity("util",key_util);
+
 	
 	Queue queue_task;
 	
@@ -187,6 +188,13 @@ public class ProjectServlet extends HttpServlet {
 	    		entity_util.setProperty("Until",date_until);
 	    		entity_util.setProperty("LastId",null);
 	    		datastore.put(entity_util);
+	    		
+	    		// salva l'indice ricerca
+				Entity ParametriRicerche = new Entity ("Parametri", IndiceRicerche);
+				ParametriRicerche.setProperty("Hashtag", hashtag);
+				ParametriRicerche.setProperty("Since", date_since);
+				ParametriRicerche.setProperty("Until", date_until);
+				datastore.put(ParametriRicerche);
 	    		
 	    		// Si aggiunge alla coda il task per la ricerca che si avvia subito
 	    		queue_task.add(withUrl("/taskRicerca"));

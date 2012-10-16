@@ -56,8 +56,7 @@ public class TaskServlet extends HttpServlet {
 	// creazione chiave per parametri util
 	Key key_util = KeyFactory.createKey("Parametri", "util_param");
 	Entity entity_util = new Entity("util",key_util);
-	//creo la chiave delle ricerche
-	Key IndiceRicerche = KeyFactory.createKey("Indice", "Ricerche");
+	
 	
 	// dati per la ricerca
 	String Upperhash, date_s, date_u;
@@ -103,12 +102,6 @@ public class TaskServlet extends HttpServlet {
 		//------------------------------------------
 		if (entity_util.getProperty("Fermata").toString().compareTo("true") == 0)
 		{
-			// Salvataggio ricerca nel DS
-			Entity ParametriRicerche = new Entity ("Parametri", IndiceRicerche);
-			ParametriRicerche.setProperty("Hashtag", hash);
-			ParametriRicerche.setProperty("Since", date_s);
-			ParametriRicerche.setProperty("Until", date_u);
-			datastore.put(ParametriRicerche);
 			
 			// Inizializzazione entity_util
 			 entity_util.setProperty("Ricerca", "Libera");
@@ -198,7 +191,6 @@ public class TaskServlet extends HttpServlet {
 						//STATUS
 						else if ( status.getPlace() !=null)  
 						{
-								
 								String [] coord = GoogleGeoCode.getLocation(status.getPlace().getFullName());
 								entity.setProperty("latitude", coord[0]);
 								entity.setProperty("longitude", coord[1]);
@@ -290,12 +282,6 @@ public class TaskServlet extends HttpServlet {
 				}
 				else  // SE HA FINITO
 				{
-					// salva l'indice ricerca
-					Entity ParametriRicerche = new Entity ("Parametri", IndiceRicerche);
-					ParametriRicerche.setProperty("Hashtag", hash);
-					ParametriRicerche.setProperty("Since", date_s);
-					ParametriRicerche.setProperty("Until", date_u);
-					datastore.put(ParametriRicerche);
 				
 					System.out.println("FINE totale");
 					
