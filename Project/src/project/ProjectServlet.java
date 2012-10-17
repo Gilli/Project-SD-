@@ -1,20 +1,20 @@
+// Authors Gherardi Andrea - Gilli Daniele
+
 package project;
+
+/*	PROJECTSERVLET.JAVA
+ *   	
+ *   Servlet principale che gestisce le richieste lato-client. 
+ * 
+ */
+
 
 import java.io.IOException;
 
 
 import javax.servlet.http.*;
 
-import twitter4j.Query;
-import twitter4j.QueryResult;
-import twitter4j.Status;
-import twitter4j.Tweet;
-import twitter4j.Twitter;
-import twitter4j.TwitterException;
-import twitter4j.TwitterFactory;
-import twitter4j.User;
 
-import com.google.appengine.api.ThreadManager;
 //import com.google.appengine.api.search.query.QueryParser.query_return;
 import com.google.appengine.api.datastore.DatastoreService;
 import com.google.appengine.api.datastore.DatastoreServiceFactory;

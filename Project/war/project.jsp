@@ -26,6 +26,7 @@
 	*/
 	
 	String Ricerca = "Libera";
+	String hashtag_ricerca = "";
 	DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 	Key key_util = KeyFactory.createKey("Parametri", "util_param");
 	Key IndiceRicerche = KeyFactory.createKey("Indice", "Ricerche");
@@ -43,6 +44,7 @@
   
 	String Avvio_Ricerca;
 	
+	
 	// Controllo sulla ricerca
 	if (request.getParameter("Ricerca") != null)
 	{
@@ -50,6 +52,21 @@
 		if (Avvio_Ricerca.compareTo("Attivata") == 0)
 		{
 			Ricerca = "Attiva";  // Indica che è stata attivata una ricerca
+			Query dataquery_stato  = new Query ("util",key_util).setAncestor(key_util);
+			List<Entity> resultdata_stato = datastore.prepare(dataquery_stato).asList(FetchOptions.Builder.withDefaults());
+			
+			if (resultdata_stato.isEmpty())
+			{
+				System.out.println(	"LISTA VUOTA");
+			}
+			else
+			{	
+				for (Entity post : resultdata_stato) 
+				{
+					hashtag_ricerca = post.getProperty("Hashtag").toString();  // prende il parametro ricerca
+				}			
+			}
+			
     	}
 	}
 	else
@@ -69,6 +86,7 @@
 				for (Entity post : resultdata_stato) 
 				{
 					Ricerca = post.getProperty("Ricerca").toString();  // prende il parametro ricerca
+					hashtag_ricerca = post.getProperty("Hashtag").toString();  // prende il parametro ricerca
 				}			
 			}
 			
@@ -290,11 +308,12 @@ window.onload = initialize;
                 
                 <% // RIQUADRO RICERCA
 				String fermata = "false";
+				String hashtag = "";
 					if (Ricerca.compareTo("Libera") != 0 )
 					{
 					%>
        				<div class="ricerca_attiva">
-                	<div class="ricerca_attiva_riga" style="text-align:center;">RICERCA IN CORSO</div>
+                	<div class="ricerca_attiva_riga" style="text-align:center;">RICERCA <%=hashtag_ricerca.toUpperCase()%> IN CORSO</div>
             		
                     <!-- Controllo sullo stato ricerca -->
                     <div class="ricerca_attiva_riga">Stato della ricerca: 
